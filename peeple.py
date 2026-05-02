@@ -33,8 +33,11 @@ class Peep:
     def get_pos(self):
         return self.pos
 
-    def step_change(self, xmax, ymax):
-        """Move the peep randomly by one square inside the world."""
+    def step_change(self, world):
+        """Move the peep randomly, but do not move into barriers."""
+        xmax = world.shape[0]
+        ymax = world.shape[1]
+
         xmove, ymove = random.choice(self.moves)
 
         new_x = self.pos[0] + xmove
@@ -50,4 +53,7 @@ class Peep:
         if new_y >= ymax:
             new_y = ymax - 1
 
-        self.pos = (new_x, new_y)
+        # Barrier cells are marked as 11.
+        # The peep only moves if the new cell is not a barrier.
+        if world[new_x, new_y] != 11:
+            self.pos = (new_x, new_y)
