@@ -77,8 +77,38 @@ def check_actor_interactions(peep, puppy_pos, bully_pos):
     peep.sad = min(100, max(0, peep.sad))
     peep.angry = min(100, max(0, peep.angry))
 
+def check_item_interactions(peep, flower_pos):
+    px, py = peep.get_pos()
 
-def plot_world(world, peeps, puppy_pos, bully_pos):
+    if abs(px - flower_pos[0]) <= 1 and abs(py - flower_pos[1]) <= 1:
+        peep.happy += 3
+
+    peep.happy = min(100, max(0, peep.happy))
+    peep.sad = min(100, max(0, peep.sad))
+    peep.angry = min(100,max(0, peep.angry))
+
+def apply_event(peeps, step):
+    """Apply global events at certain timesteps."""
+
+    # Event 1: rain（下雨）
+    if step == 3:
+        print("🌧 Rain event!")
+        for peep in peeps:
+            peep.sad += 2
+
+    # Event 2: music（音乐）
+    if step == 6:
+        print("🎵 Music event!")
+        for peep in peeps:
+            peep.happy += 3
+            peep.angry -= 1
+
+            peep.happy = min(100, max(0, peep.happy))
+            peep.angry = min(100, max(0, peep.angry))
+
+
+
+def plot_world(world, peeps, puppy_pos, bully_pos, flower_pos):
     """Plot the world, barriers, actors and peep positions."""
     xvalues = []
     yvalues = []
@@ -94,6 +124,7 @@ def plot_world(world, peeps, puppy_pos, bully_pos):
     plt.scatter(xvalues, yvalues, color="red", label="Peeps")
     plt.scatter(puppy_pos[0], puppy_pos[1], color="green", s=150, label="Puppy")
     plt.scatter(bully_pos[0], bully_pos[1], color="black", s=150, label="Bully")
+    plt.scatter(flower_pos[0], flower_pos[1], color="purple", s=150, label="Flower")
 
     plt.title("Emotion Simulation - Actors")
     plt.xlabel("X position")
@@ -127,6 +158,7 @@ def main():
 
     puppy_pos = (5, 5)
     bully_pos = (20, 10)
+    flower_pos = (12,15)
 
     peeps[0].happy = 0
     peeps[0].pos= puppy_pos
@@ -142,10 +174,13 @@ def main():
 
     for step in range(SIM_LENGTH):
         print("\n### TIMESTEP", step, "###")
+        
+        apply_event(peeps,step)
 
         for peep in peeps:
             peep.step_change(world)
             check_actor_interactions(peep, puppy_pos, bully_pos)
+            check_item_interactions(peep, flower_pos)
             print(peep)
 
         avg_happy, avg_sad, avg_angry = get_average_emotions(peeps)
@@ -153,7 +188,7 @@ def main():
         sad_history.append(avg_sad)
         angry_history.append(avg_angry)
 
-    plot_world(world, peeps, puppy_pos, bully_pos)
+    plot_world(world, peeps, puppy_pos, bully_pos, flower_pos)
     plot_emotions(happy_history, sad_history, angry_history)
 
 
