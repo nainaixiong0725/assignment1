@@ -1,10 +1,3 @@
-#
-# Author:
-# ID:
-#
-# emoSim.py - Basic emotion simulation with barriers
-#
-
 import random
 
 import matplotlib.pyplot as plt
@@ -53,6 +46,24 @@ def make_peeps(num_peeps, world):
     return peeps
 
 
+def get_average_emotions(peeps):
+    """Calculate average happy, sad and angry values."""
+    total_happy = 0
+    total_sad = 0
+    total_angry = 0
+
+    for peep in peeps:
+        total_happy += peep.happy
+        total_sad += peep.sad
+        total_angry += peep.angry
+
+    avg_happy = total_happy / len(peeps)
+    avg_sad = total_sad / len(peeps)
+    avg_angry = total_angry / len(peeps)
+
+    return avg_happy, avg_sad, avg_angry
+
+
 def plot_world(world, peeps):
     """Plot the world, barriers and peep positions."""
     xvalues = []
@@ -63,6 +74,7 @@ def plot_world(world, peeps):
         xvalues.append(pos[0])
         yvalues.append(pos[1])
 
+    plt.figure()
     plt.imshow(world.T, origin="lower", cmap="Paired", vmin=0, vmax=11)
     plt.scatter(xvalues, yvalues, color="red")
 
@@ -74,10 +86,30 @@ def plot_world(world, peeps):
     plt.show()
 
 
+def plot_emotions(happy_history, sad_history, angry_history):
+    """Plot average emotions over time."""
+    timesteps = range(len(happy_history))
+
+    plt.figure()
+    plt.plot(timesteps, happy_history, label="Happy")
+    plt.plot(timesteps, sad_history, label="Sad")
+    plt.plot(timesteps, angry_history, label="Angry")
+
+    plt.title("Average Emotions Over Time")
+    plt.xlabel("Timestep")
+    plt.ylabel("Average emotion value")
+    plt.legend()
+    plt.show()
+
+
 def main():
     """Run the basic emotion simulation."""
     world = build_world(WORLD_X, WORLD_Y)
     peeps = make_peeps(NUM_PEEPS, world)
+
+    happy_history = []
+    sad_history = []
+    angry_history = []
 
     print("### INITIAL PEEPS ###")
     for peep in peeps:
@@ -89,7 +121,13 @@ def main():
             peep.step_change(world)
             print(peep)
 
+        avg_happy, avg_sad, avg_angry = get_average_emotions(peeps)
+        happy_history.append(avg_happy)
+        sad_history.append(avg_sad)
+        angry_history.append(avg_angry)
+
     plot_world(world, peeps)
+    plot_emotions(happy_history, sad_history, angry_history)
 
 
 if __name__ == "__main__":
