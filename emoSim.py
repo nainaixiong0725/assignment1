@@ -3,7 +3,7 @@ import random
 import matplotlib.pyplot as plt
 import numpy as np
 
-from peeple import Peep
+from people import Peep
 
 
 WORLD_X = 30
@@ -16,7 +16,6 @@ def build_world(xmax, ymax):
     """Create a world grid with some barrier cells."""
     world = np.zeros((xmax, ymax), dtype=int)
 
-    # Add four square barriers in the world.
     world[1:4, 1:4] = 11
     world[1:4, ymax - 4:ymax - 1] = 11
     world[xmax - 4:xmax - 1, 1:4] = 11
@@ -35,7 +34,6 @@ def make_peeps(num_peeps, world):
         rand_x = random.randint(0, xmax - 1)
         rand_y = random.randint(0, ymax - 1)
 
-        # If a peep starts on a barrier, move it to the centre area.
         if world[rand_x, rand_y] == 11:
             rand_x = xmax // 2
             rand_y = ymax // 2
@@ -64,8 +62,24 @@ def get_average_emotions(peeps):
     return avg_happy, avg_sad, avg_angry
 
 
-def plot_world(world, peeps):
-    """Plot the world, barriers and peep positions."""
+def check_actor_interactions(peep, puppy_pos, bully_pos):
+    """Check whether a peep is near the puppy or bully."""
+    px, py = peep.get_pos()
+
+    if abs(px - puppy_pos[0]) <= 1 and abs(py - puppy_pos[1]) <= 1:
+        peep.happy += 5
+
+    if abs(px - bully_pos[0]) <= 1 and abs(py - bully_pos[1]) <= 1:
+        peep.angry += 5
+        peep.sad += 2
+
+    peep.happy = min(100, max(0, peep.happy))
+    peep.sad = min(100, max(0, peep.sad))
+    peep.angry = min(100, max(0, peep.angry))
+
+
+def plot_world(world, peeps, puppy_pos, bully_pos):
+    """Plot the world, barriers, actors and peep positions."""
     xvalues = []
     yvalues = []
 
@@ -76,13 +90,17 @@ def plot_world(world, peeps):
 
     plt.figure()
     plt.imshow(world.T, origin="lower", cmap="Paired", vmin=0, vmax=11)
-    plt.scatter(xvalues, yvalues, color="red")
 
-    plt.title("Emotion Simulation - Barriers")
+    plt.scatter(xvalues, yvalues, color="red", label="Peeps")
+    plt.scatter(puppy_pos[0], puppy_pos[1], color="green", s=150, label="Puppy")
+    plt.scatter(bully_pos[0], bully_pos[1], color="black", s=150, label="Bully")
+
+    plt.title("Emotion Simulation - Actors")
     plt.xlabel("X position")
     plt.ylabel("Y position")
     plt.xlim(0, WORLD_X - 1)
     plt.ylim(0, WORLD_Y - 1)
+    plt.legend()
     plt.show()
 
 
@@ -107,6 +125,13 @@ def main():
     world = build_world(WORLD_X, WORLD_Y)
     peeps = make_peeps(NUM_PEEPS, world)
 
+    puppy_pos = (5, 5)
+    bully_pos = (20, 10)
+
+    peeps[0].happy = 0
+    peeps[0].pos= puppy_pos
+
+
     happy_history = []
     sad_history = []
     angry_history = []
@@ -117,8 +142,10 @@ def main():
 
     for step in range(SIM_LENGTH):
         print("\n### TIMESTEP", step, "###")
+
         for peep in peeps:
             peep.step_change(world)
+            check_actor_interactions(peep, puppy_pos, bully_pos)
             print(peep)
 
         avg_happy, avg_sad, avg_angry = get_average_emotions(peeps)
@@ -126,7 +153,7 @@ def main():
         sad_history.append(avg_sad)
         angry_history.append(avg_angry)
 
-    plot_world(world, peeps)
+    plot_world(world, peeps, puppy_pos, bully_pos)
     plot_emotions(happy_history, sad_history, angry_history)
 
 
